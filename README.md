@@ -101,6 +101,7 @@ ALTER USER vivance QUOTA UNLIMITED ON USERS;
 SELECT SYS_CONTEXT('USERENV', 'CON_NAME') FROM DUAL;
 ```
 📸 *Screenshot: session_container_check.png*
+
 ![user creation and set container](https://github.com/user-attachments/assets/205783a1-093f-4da4-8ce0-3e0943cb0f5f)
 
 ---
@@ -155,6 +156,7 @@ BEGIN
 END;
 ```
 📸 *Screenshot: procedure output*
+
 ![test procedure](https://github.com/user-attachments/assets/a93886c1-f7ca-4ab9-a620-61d20b6fc231)
 
 ### Function: Count Affected Individuals
@@ -167,6 +169,7 @@ BEGIN
 END;
 ```
 📸 *Screenshot: function output*
+
 ![test function](https://github.com/user-attachments/assets/83e10a8c-bcce-4c5e-bf0b-015e360a7d37)
 
 ---
@@ -199,6 +202,7 @@ BEGIN
 END;
 ```
 📸 *Screenshot: trigger_block_weekday.png*
+
 ![all triggers](https://github.com/user-attachments/assets/5839936c-c08b-4589-9cf0-9787f753d377)
 
 
@@ -222,6 +226,7 @@ BEGIN
 END;
 ```
 📸 *Screenshot: audit_log_output.png*
+
 ![checking audit log](https://github.com/user-attachments/assets/4f004b8b-026b-498f-aa8a-41042a9a8c6e)
 
 ---
@@ -229,6 +234,7 @@ END;
 ## 📊 Monitoring with OEM Express
 - View session activity, user login attempts, and tablespace usage
 📸 *Screenshot: oem_monitoring_view.png*
+
 ![image (1)](https://github.com/user-attachments/assets/c49124b8-ebb7-41d2-8844-79243ca960ef)
 
 
