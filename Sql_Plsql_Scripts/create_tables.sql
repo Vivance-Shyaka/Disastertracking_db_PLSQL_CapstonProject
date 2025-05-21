@@ -1,4 +1,4 @@
--- SQL script to create tables of Disaster Tracking System
+-- SQL scripts to create tables of Disaster Tracking System
 -- Disaster Table
 CREATE TABLE Disaster (
     Disaster_ID        NUMBER PRIMARY KEY,
