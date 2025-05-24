@@ -94,6 +94,7 @@ ALTER SESSION SET CONTAINER = MON_27237_VIVANCE_DISASTERTS_DB;
 ```
 
 **2. Create your project user**
+I created user whom i used for my Disaster tracking system and also i grant him all privileges.
 
 ```sql
 CREATE USER vivance IDENTIFIED BY vivance;
@@ -110,11 +111,38 @@ SELECT SYS_CONTEXT('USERENV', 'CON_NAME') FROM DUAL;
 ![user creation and set container](https://github.com/user-attachments/assets/205783a1-093f-4da4-8ce0-3e0943cb0f5f)
 
 ---
+## 📋 Business Process Modeling
+**Explanation of Business Process Diagram**
+- **Description:**
+- **Citizen/Reporter:** Triggers disaster events, submits reports
+- **System:** Validates input, logs data, restricts operations on holidays
+- **Admin:** Confirms severity, assigns teams Response Team: Executes actions, evaluates needs, locates individuals
+- **NGO Coordinator:** Delivers aid, coordinates supplies
+- **How It Supports MIS:**
+ Streamlines operations by integrating different actors through automated workflows.
+ Improves decision-making by providing centralized, accurate, and real-time data.
+ Enhances organizational efficiency through coordination and rapid response tools.
+ ![Disaster_management_BPMNdiagram](https://github.com/user-attachments/assets/915b5316-268a-442b-9c37-5ccf2a39ab8d)
+
 
 ## 📋 Database Implementation
 
 ### ER Diagram & Normalized Structure
-- ERD includes `Disaster`, `Response_Team`, `Resource`, `Affected_Individual`, `Team_Assignment`, and relationships.
+**ERD includes** `Disaster`, `Response_Team`, `Resource`, `Affected_Individual`, `Team_Assignment`, and relationships.
+- **Relationships & Constraints includes:**
+- One Disaster can be handled by many Response_Teams → 1-to-many via Team_Assignment.
+- One Response_Team can handle multiple Disasters → many-to-many via Team_Assignment.
+- One Disaster can use many Resources → many-to-many via Disaster_Resource.
+- One Affected_Individual belongs to one Disaster (optional FK: Disaster_ID).
+ - All tables will enforce constraints like:
+o NOT NULL for required fields.
+o CHECK constraints for fields like Severity, Status
+**Handling Data Scenarios**
+**Example:**
+ - A flood in Kigali is reported → System creates a record in Disaster.
+ - Two teams are assigned via Team_Assignment.
+ - Emergency kits from Resource table are linked via Disaster_Resource.
+ - Affected individuals are logged with their needs.
 📸 *Screenshot: erd_disaster_system.png*
 ![disaster_management_ERdiagram](https://github.com/user-attachments/assets/6b95ed7e-7eb6-49c5-bf3f-0b8f09038f2b)
 
@@ -145,7 +173,12 @@ INSERT INTO Affected_Individual VALUES (301, 'John Doe', 34, 'Male', 'Nyamirambo
 ---
 
 ## 🔄 Procedures, Functions & Cursors
-
+I created a procedure (Get_Teams_By_Disaster) that:
+- Takes a disaster ID
+- Loops through all assigned teams
+- Outputs their names and status
+- Includes exception handling for safety
+**Why it matters:** Procedures encapsulate logic for reuse, reduce redundancy, and improve clarity.
 ### Procedure: Get Teams by Disaster
 ```sql
 CREATE OR REPLACE PROCEDURE Get_Teams_By_Disaster (p_disaster_id IN NUMBER) IS
@@ -165,6 +198,11 @@ END;
 ![test procedure](https://github.com/user-attachments/assets/a93886c1-f7ca-4ab9-a620-61d20b6fc231)
 
 ### Function: Count Affected Individuals
+I built a function (Count_Affected_Individuals) that:
+- Accepts a disaster ID
+- Returns the number of affected individuals
+- Handles errors and avoids system crashes
+**Why it matters:** Functions return values that can be used in analytics or interface elements
 ```sql
 CREATE OR REPLACE FUNCTION Count_Affected_Individuals (p_disaster_id IN NUMBER) RETURN NUMBER IS
     v_count NUMBER;
@@ -178,9 +216,68 @@ END;
 ![test function](https://github.com/user-attachments/assets/83e10a8c-bcce-4c5e-bf0b-015e360a7d37)
 
 ---
+### Cursors : Show All Disasters With Affected Count
+I demonstrated a cursor that:
+- Iterates through all disasters
+- Uses the function to fetch affected counts
+- Displays a report via DBMS_OUTPUT
+- **Why it matters:** Cursors are great for row-by-row processing in reports or data transformations.
+```sql
+DECLARE
+    CURSOR cur_disasters IS
+        SELECT Disaster_ID, Type, Location FROM Disaster;
+
+    v_count NUMBER;
+BEGIN
+    FOR rec IN cur_disasters LOOP
+        v_count := Count_Affected_Individuals(rec.Disaster_ID);
+        DBMS_OUTPUT.PUT_LINE('Disaster: ' || rec.Type || ' at ' || rec.Location || ' has ' || v_count || ' affected individuals.');
+    END LOOP;
+END;
+```
+📸 *Screenshot: Cursor output*
+![cursor](https://github.com/user-attachments/assets/ad38b803-b487-40c8-85d6-dae866f5979a)
+
+### Package
+I wrapped the procedures and functions in a PL/SQL package (Disaster_Utils):
+ - Groups related functionality
+ - Makes code easier to maintain and scale
+ -  **Why it matters:** Packages are essential for modular and enterprise-level PL/SQL programming.
+```sql
+CREATE OR REPLACE PACKAGE Disaster_Utils AS
+    PROCEDURE Get_Teams_By_Disaster(p_disaster_id IN NUMBER);
+    FUNCTION Count_Affected_Individuals(p_disaster_id IN NUMBER) RETURN NUMBER;
+END Disaster_Utils;
+/
+
+CREATE OR REPLACE PACKAGE BODY Disaster_Utils AS
+    PROCEDURE Get_Teams_By_Disaster(p_disaster_id IN NUMBER) IS
+    BEGIN
+        FOR rec IN (
+            SELECT rt.Team_Name, ta.Assignment_Status
+            FROM Team_Assignment ta
+            JOIN Response_Team rt ON ta.Team_ID = rt.Team_ID
+            WHERE ta.Disaster_ID = p_disaster_id
+        ) LOOP
+            DBMS_OUTPUT.PUT_LINE('Team: ' || rec.Team_Name || ' | Status: ' || rec.Assignment_Status);
+        END LOOP;
+    END;
+
+    FUNCTION Count_Affected_Individuals(p_disaster_id IN NUMBER) RETURN NUMBER IS
+        v_count NUMBER;
+    BEGIN
+        SELECT COUNT(*) INTO v_count
+        FROM Affected_Individual
+        WHERE Disaster_ID = p_disaster_id;
+        RETURN v_count;
+    END;
+END Disaster_Utils;
+```
+📸 *Screenshot: Package output*
+![package](https://github.com/user-attachments/assets/1c3bec8f-3781-40dc-a10c-5a9720482eab)
 
 ## 🧾 Trigger & Auditing Logic
-
+I created a triggers to restrict DML on Resource table during weekdays or holidays
 ### Holiday Table for Restrictions
 ```sql
 CREATE TABLE Public_Holidays (
@@ -212,6 +309,7 @@ END;
 
 
 ### Audit Log Table and Trigger
+- I did an Audit_Log table to track all attempts on sensitive tables
 ```sql
 CREATE TABLE Audit_Log (
     Audit_ID        NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
