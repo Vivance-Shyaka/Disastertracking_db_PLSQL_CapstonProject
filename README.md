@@ -46,6 +46,7 @@ The **Disaster Tracking System (DTS)** is a centralized, PL/SQL-based solution t
 │   ├── create_tables.sql
 │   ├── insert_data.sql
 │   ├── procedures_functions.sql
+│   ├── cursors_packages.sql
 │   ├── triggers_auditing.sql
 ├── /diagrams
 │   ├── erd_disaster_system.png
@@ -85,11 +86,15 @@ The **Disaster Tracking System (DTS)** is a centralized, PL/SQL-based solution t
 ## 💻 Setup & Configuration
 
 **1. Create and connect to your pluggable database**
+I created pluggable database called MON_27237_VIVANCE_DISASTERTS_DB and set it as container where i create use user 
+and helps in connection.
 ```sql
 ALTER SESSION SET CONTAINER = MON_27237_VIVANCE_DISASTERTS_DB;
+
 ```
 
 **2. Create your project user**
+
 ```sql
 CREATE USER vivance IDENTIFIED BY vivance;
 GRANT CONNECT, RESOURCE, DBA TO vivance;
